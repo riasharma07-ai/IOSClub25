@@ -250,7 +250,9 @@ struct ProfileView: View {
         phoneNumber: "+1 123 456 7890",
         joinDate: "November 2025",
         userName: "@random_sub",
-        bday: "1/1/2005"
+        bday: "1/1/2005",
+        bio: "Hello! I'm a new user and I'm excited to join the community!",
+        quote: "Be the change you want to see."
     )
     
     @State private var notificationsEnabled = false
@@ -297,6 +299,19 @@ struct ProfileView: View {
                     
                     // Personal Info Display
                     VStack(spacing: 0){
+                        Text("Bio")
+                            .frame(maxWidth: 360, alignment: .leading)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Spacer()
+                        VStack(spacing: 0){
+                            ProfileInfoRow(icon: "person.fill", title: "About", value: user.bio)
+                            ProfileInfoRow(icon: "bubble.right.fill", title: "Quote", value: user.quote)
+                        }
+                        .background(Color.white)
+                        .cornerRadius(15)
+                        .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+                        Spacer()
                         Text("Personal Information")
                             .frame(maxWidth: 360, alignment: .leading)
                             .font(.title2)
@@ -341,12 +356,16 @@ struct ProfileView: View {
         @State private var editedEmail: String = ""
         @State private var editedPhone: String = ""
         @State private var editedBday: String = ""
+        @State private var editedBio: String = ""
+        @State private var editedQuote: String = ""
         
         var body: some View {
             NavigationView {
                 Form {
                     Section(header: Text("Personal Information")) {
                         TextField("Full Name", text: $editedName)
+                        TextField("Tell us a little about yourself!", text: $editedBio)
+                        TextField("What's one of your favorite motivational quotes?", text: $editedQuote)
                         TextField("Email", text: $editedEmail)
                             .keyboardType(.emailAddress)
                         TextField("Phone", text: $editedPhone)
@@ -364,6 +383,8 @@ struct ProfileView: View {
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Save") {
+                            user.bio = editedBio
+                            user.quote = editedQuote
                             user.name = editedName
                             user.email = editedEmail
                             user.phoneNumber = editedPhone
@@ -375,6 +396,8 @@ struct ProfileView: View {
                 }
             }
             .onAppear {
+                editedBio = user.bio
+                editedQuote = user.quote
                 editedName = user.name
                 editedEmail = user.email
                 editedPhone = user.phoneNumber
@@ -391,6 +414,8 @@ struct ProfileView: View {
         let joinDate: String
         var userName: String
         var bday: String
+        var bio: String
+        var quote: String
         
         var initials: String {
             let components = name.components(separatedBy: " ")
