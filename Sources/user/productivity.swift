@@ -27,7 +27,7 @@ enum Theme: String, CaseIterable {
         }
     }
     
-    // Accent
+    // Accent (of buttons)
     var accentColor: Color {
         switch self {
         case .light: return .blue
@@ -96,6 +96,15 @@ enum Theme: String, CaseIterable {
         case .sunset: return .yellow
         }
     }
+    
+    var barsColor: Color {
+        switch self {
+        case .light: return.blue
+        case .dark: return .red
+        case .ocean: return .mint
+        case .sunset: return .pink
+        }
+    }
 }
 
 // MARK: - Theme manager (shared)
@@ -106,7 +115,7 @@ class ThemeManager: ObservableObject {
 struct ContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedTab = 1
-    
+        
     var body: some View {
         TabView(selection: $selectedTab) {
             HabitsView()
@@ -163,7 +172,6 @@ struct HabitsView: View {
     }
 }
 
-// MARK: - Dashboard supporting types
 struct Habit {
     let title: String
     let isComplete: Bool
@@ -175,7 +183,7 @@ struct Day: Identifiable {
     let taskDone: Int
 }
 
-// MARK: - DashboardView
+// DashboardView
 struct DashboardView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedTab: Int
@@ -253,7 +261,7 @@ struct DashboardView: View {
                         ForEach(weekData) { day in
                             VStack(spacing: 6) {
                                 Rectangle()
-                                    .fill(Color.orange.opacity(0.6))
+                                    .fill((themeManager.currentTheme.barsColor).opacity(0.6))
                                     .frame(width: 20, height: CGFloat(day.taskDone) / 5.0 * 120)
                                 Text(day.day)
                                     .font(.caption2)
