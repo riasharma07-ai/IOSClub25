@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Theme definitions
+// Theme definitions
 enum Theme: String, CaseIterable {
     case light
     case dark
@@ -97,6 +97,7 @@ enum Theme: String, CaseIterable {
         }
     }
     
+    // Color of Bar Graph
     var barsColor: Color {
         switch self {
         case .light: return.blue
@@ -115,7 +116,7 @@ class ThemeManager: ObservableObject {
 struct ContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedTab = 1
-        
+    
     var body: some View {
         TabView(selection: $selectedTab) {
             HabitsView()
@@ -168,6 +169,7 @@ struct HabitsView: View {
             .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
             .foregroundColor(themeManager.currentTheme.textColor)
             .navigationTitle("Habits")
+            .navigationBarTextColor(themeManager.currentTheme == .dark ? .white : .black)
         }
     }
 }
@@ -193,7 +195,7 @@ struct DashboardView: View {
     }
     
     let messages = [
-        "Hello! Ready to tackle the day? ☀️💪", "You're doing great, keep going! 🌟🔥", "So proud of you, keep it up 😊👏", "Even small progress counts. 🌱", "One step at a time, you’ve got this! 🧗‍♀️", "A little progress every day adds up. 📈", "You're amazing, keep shining! 🌈💖", "Show up for yourself today 🤍", "Do it for the future you. 💫🫶", "Small habits, big results! 🌱➡️🌳", "Discipline > motivation. ⚡️💪"
+        "Hello! Ready to tackle the day? ☀️💪", "You're doing great, keep going! 🌟🔥", "So proud of you, keep it up. 😊👏", "Even small progress counts. 🌱", "One step at a time, you’ve got this! 🧗‍♀️", "A little progress every day adds up. 📈", "You're amazing, keep shining! 🌈💖", "Show up for yourself today. 🤍", "Do it for the future you. 💫🫶", "Small habits, big results! 🌱➡️🌳", "Discipline > motivation. ⚡️💪"
     ]
     
     let todaysHabits = [
@@ -217,7 +219,7 @@ struct DashboardView: View {
     private var streak = 12
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     // Message
@@ -324,11 +326,13 @@ struct DashboardView: View {
             .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
             .foregroundColor(themeManager.currentTheme.textColor)
             .navigationTitle("Dashboard")
+            .navigationBarTextColor(themeManager.currentTheme == .dark ? .white : .black)
+
         }
     }
 }
 
-// MARK: - CalendarView
+// CalendarView
 struct CalendarView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedTab: Int
@@ -345,6 +349,8 @@ struct CalendarView: View {
             .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
             .foregroundColor(themeManager.currentTheme.textColor)
             .navigationTitle("Calendar")
+            .navigationBarTextColor(themeManager.currentTheme == .dark ? .white : .black)
+
         }
     }
 }
@@ -596,5 +602,32 @@ struct ThemeSelectionView: View {
                 )
                 .shadow(radius: 4)
         }
+    }
+}
+
+// This is for the change of the color of the Dashboard title respective to the theme!
+struct NavigationBarColor: ViewModifier {
+    var textColor: UIColor
+    
+    init(textColor: UIColor) {
+        self.textColor = textColor
+        
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [.foregroundColor: textColor]
+        appearance.largeTitleTextAttributes = [.foregroundColor: textColor]
+
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+    }
+    
+    func body(content: Content) -> some View {
+        content
+    }
+}
+
+extension View {
+    func navigationBarTextColor(_ color: Color) -> some View {
+        self.modifier(NavigationBarColor(textColor: UIColor(color)))
     }
 }
