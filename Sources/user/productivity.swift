@@ -1,10 +1,114 @@
 import SwiftUI
 
-// Main app view with tab navigation
+// MARK: - Theme definitions
+enum Theme: String, CaseIterable {
+    case light
+    case dark
+    case ocean
+    case sunset   // default
+    
+    // Background Color
+    var backgroundColor: Color {
+        switch self {
+        case .light: return .white
+        case .dark: return Color.black.opacity(0.95)
+        case .ocean: return Color.blue.opacity(0.2)
+        case .sunset: return Color.orange.opacity(0.3)
+        }
+    }
+    
+    // Card Color
+    var cardColor: Color {
+        switch self {
+        case .light: return Color.white
+        case .dark: return Color.gray.opacity(0.3)
+        case .ocean: return Color.cyan.opacity(0.09)
+        case .sunset: return Color.yellow.opacity(0.09)
+        }
+    }
+    
+    // Accent
+    var accentColor: Color {
+        switch self {
+        case .light: return .blue
+        case .dark: return .yellow
+        case .ocean: return .teal
+        case .sunset: return .yellow
+        }
+    }
+    
+    // Text Color
+    var textColor: Color {
+        switch self {
+        case .light: return .black
+        case .dark: return .white
+        case .ocean: return .black
+        case .sunset: return .black
+        }
+    }
+    
+    // Color of Icons on Profile Page
+    var iconColor: Color {
+        switch self {
+        case .light: return .blue
+        case .dark: return .white
+        case .ocean: return Color(red: 0.78, green: 0.72, blue: 0.71)
+        case .sunset: return .pink
+        }
+    }
+    
+    // Color of Profile Pic (first color of gradient)
+    var profilePicColor1: Color {
+        switch self {
+        case .light: return .blue
+        case .dark: return .gray
+        case .ocean: return .blue
+        case .sunset: return .yellow
+        }
+    }
+    
+    // Color of Profile Pic (second color of gradient)
+    var profilePicColor2: Color {
+        switch self {
+        case .light: return .blue
+        case .dark: return .gray
+        case .ocean: return .mint
+        case .sunset: return .pink
+        }
+    }
+    
+    // Color for the titles of personal info
+    var personalInfoTitles: Color {
+        switch self {
+        case .light: return .gray
+        case .dark: return .white
+        case .ocean: return .gray
+        case .sunset: return .gray
+        }
+    }
+    
+    // "Edit Profile" button color
+    var editProfileColor: Color {
+        switch self {
+        case .light: return .black
+        case .dark: return .white
+        case .ocean: return .blue
+        case .sunset: return .yellow
+        }
+    }
+}
+
+// MARK: - Theme manager (shared)
+class ThemeManager: ObservableObject {
+    @Published var currentTheme: Theme = .sunset
+}
+// MARK: - ContentView (TabView)
 struct ContentView: View {
-    @State private var selectedTab = 1 // starting UI on Dashboard
+    @EnvironmentObject var themeManager: ThemeManager
+    @State private var selectedTab = 1
+    
     var body: some View {
-        TabView (selection: $selectedTab){
+        TabView(selection: $selectedTab) {
             HabitsView()
                 .tag(0)
                 .tabItem {
@@ -33,13 +137,16 @@ struct ContentView: View {
                     Text("Profile")
                 }
         }
+        // Tab accent color follows theme
+        .accentColor(themeManager.currentTheme.accentColor)
+        .background(themeManager.currentTheme.backgroundColor)
     }
 }
 
-// individual views for each tab
-
-// Erza!
+// MARK: - HabitsView
 struct HabitsView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -48,15 +155,16 @@ struct HabitsView: View {
                     .padding()
                 Spacer()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
+            .foregroundColor(themeManager.currentTheme.textColor)
             .navigationTitle("Habits")
         }
     }
 }
 
-// Dashboard - Ria Sh
-
-// Temporary struct till Habits tab is created
-struct Habit{
+// MARK: - Dashboard supporting types
+struct Habit {
     let title: String
     let isComplete: Bool
 }
@@ -67,18 +175,18 @@ struct Day: Identifiable {
     let taskDone: Int
 }
 
+// MARK: - DashboardView
 struct DashboardView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedTab: Int
-    // Daily messages that keep alternating
     
     init(selectedTab: Binding<Int>) {
-            self._selectedTab = selectedTab
-        }
+        self._selectedTab = selectedTab
+    }
     
     let messages = [
-        "Hello! Ready to tackle the day? ☀️💪", "You're doing great, keep going! 🌟🔥", "So proud of you, keep it up 😊👏", "Even small progress counts. 🌱", "One step at a time, you’ve got this! 🧗‍♀️", "A little progress every day adds up. 📈✨", "You're amazing, keep shining! 🌈💖", "Show up for yourself today 🤍", "Do it for the future you. 💫🫶", "Small habits, big results! 🌱➡️🌳", "Discipline > motivation. ⚡️💪"
+        "Hello! Ready to tackle the day? ☀️💪", "You're doing great, keep going! 🌟🔥", "So proud of you, keep it up 😊👏", "Even small progress counts. 🌱", "One step at a time, you’ve got this! 🧗‍♀️", "A little progress every day adds up. 📈", "You're amazing, keep shining! 🌈💖", "Show up for yourself today 🤍", "Do it for the future you. 💫🫶", "Small habits, big results! 🌱➡️🌳", "Discipline > motivation. ⚡️💪"
     ]
-    // Mock Data for now until Habits/Calendar tabs are created (uses structs above)
     
     let todaysHabits = [
         Habit(title: "30 minutes of cardio", isComplete: true),
@@ -95,105 +203,80 @@ struct DashboardView: View {
         Day(day: "Fri", taskDone: 2),
         Day(day: "Sat", taskDone: 1)
     ]
-    var totalHabits: Int {
-        todaysHabits.count
-    }
-    var completedHabits: Int {
-        todaysHabits.filter { $0.isComplete }.count
-    }
+    
+    var totalHabits: Int { todaysHabits.count }
+    var completedHabits: Int { todaysHabits.filter { $0.isComplete }.count }
     private var streak = 12
     
-    
     var body: some View {
-        NavigationStack{
+        NavigationView {
             ScrollView {
-                VStack {
-                    Text(messages.randomElement()!)
+                VStack(spacing: 16) {
+                    // Message
+                    Text(messages.randomElement() ?? "")
                         .font(.title3)
                         .italic()
                         .padding()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    VStack{
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                    
+                    // Today Card
+                    VStack {
                         Text("TODAY")
                             .font(.title2)
                             .bold()
-                        Spacer()
-                        HStack{
+                        Spacer().frame(height: 6)
+                        HStack {
                             Text("Completed:")
                                 .bold()
                             Text("\(completedHabits)/\(totalHabits) tasks")
                         }
-                        Spacer()
-                        HStack{
+                        Spacer().frame(height: 6)
+                        HStack {
                             Text("Streak:")
                                 .bold()
                             Text("\(streak) 🔥")
                         }
                     }
                     .padding()
-                    .background(Color.yellow.opacity(0.3))
+                    .background(themeManager.currentTheme.cardColor)
                     .cornerRadius(12)
-                    .shadow(color: .gray.opacity(0.4), radius: 12, x:0, y:2)
-                    // Weekly Overview (Bar Graph with struct as placeholder)
-                    Spacer()
-                        .frame(height: 10)
-                    Text("Weekly Overview").font(.title2).fontWeight(.bold)
-                    VStack{
-                        // Y-Axis
-                        HStack(alignment: .bottom, spacing: 0){
-                            VStack{
-                                ForEach((0...5).reversed(), id: \.self) { label in
-                                    Spacer()
-                                    Text("\(label)")
-                                        .font(.caption2)
-                                        .frame(height: 20)
-                                }
+                    .shadow(color: Color.gray.opacity(0.4), radius: 12, x: 0, y: 2)
+                    
+                    // Weekly Overview title
+                    Text("Weekly Overview")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    // Weekly chart (simple)
+                    HStack(alignment: .bottom, spacing: 12) {
+                        ForEach(weekData) { day in
+                            VStack(spacing: 6) {
+                                Rectangle()
+                                    .fill(Color.orange.opacity(0.6))
+                                    .frame(width: 20, height: CGFloat(day.taskDone) / 5.0 * 120)
+                                Text(day.day)
+                                    .font(.caption2)
                             }
-                            .frame(width: 20)
-                            
-                            // Bars and X-Axis
-                            GeometryReader { geo in
-                                HStack(alignment: .bottom, spacing: 16) {
-                                    ForEach(weekData) { day in
-                                        VStack (spacing: 4){
-                                            Spacer()
-                                                .frame(height: 15)
-                                            // Bar
-                                            Rectangle()
-                                                .fill(Color.orange.opacity(0.6))
-                                                .frame(
-                                                    width: 20,
-                                                    height: CGFloat(day.taskDone) / CGFloat(5) * 140 )
-                                            
-                                            // X-axis label
-                                            Text(day.day)
-                                                .font(.caption2)
-                                                .frame(height: 14)
-                                        }
-                                    }
-                                }
-                                .frame(width: geo.size.width, alignment: .center)
-                            }
-                            .frame(width: CGFloat(weekData.count) * 36)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
                     
-                    Spacer()
-                        .frame(height: 20)
-                    var averageTasks: Double {
-                        let total = weekData.reduce(0) {$0 + $1.taskDone}
+                    // Average suggestion
+                    let averageTasks: Double = {
+                        let total = weekData.reduce(0) { $0 + $1.taskDone }
                         return Double(total) / Double(weekData.count)
-                    }
+                    }()
+                    
                     Text("Based on your history,")
                         .italic()
                     Text("try setting a goal for \(Int(averageTasks)) tasks per day.")
                         .italic()
                     
-                    Divider()
-                    Spacer()
+                    Divider().padding(.vertical, 8)
                     
-                    // Quick Actions
+                    // Quick Actions and Top 3
                     Text("Today’s Top 3").font(.headline)
                     VStack(alignment: .leading, spacing: 10) {
                         ForEach(todaysHabits, id: \.title) { habit in
@@ -203,31 +286,45 @@ struct DashboardView: View {
                                 .cornerRadius(8)
                         }
                     }
-                    Spacer()
-                    HStack {
+                    
+                    HStack(spacing: 12) {
                         Button("Add New Habit") {
-                            print("Add tapped")
                             selectedTab = 0
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(DefaultButtonStyle())
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 10)
+                        .background(themeManager.currentTheme.accentColor.opacity(0.2))
+                        .cornerRadius(8)
+                        
                         Button("View Full Calendar") {
-                            print("Calendar tapped")
                             selectedTab = 2
                         }
-                        .buttonStyle(.bordered)
-                        
+                        .buttonStyle(BorderlessButtonStyle())
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 10)
+                        .background(Color.clear)
+                        .cornerRadius(8)
                     }
+                    .padding(.top, 8)
+                    
+                    Spacer(minLength: 20)
                 }
-                .navigationTitle("Dashboard")
+                .padding()
+                .frame(maxWidth: .infinity)
             }
+            .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
+            .foregroundColor(themeManager.currentTheme.textColor)
+            .navigationTitle("Dashboard")
         }
     }
-    
 }
 
-// Nancy!
+// MARK: - CalendarView
 struct CalendarView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedTab: Int
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -236,14 +333,18 @@ struct CalendarView: View {
                     .padding()
                 Spacer()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
+            .foregroundColor(themeManager.currentTheme.textColor)
             .navigationTitle("Calendar")
         }
     }
 }
 
-
-// Profile Tab - Ria S
+// MARK: - ProfileView
 struct ProfileView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    
     @State private var user = UserProfile(
         name: "Random Subject",
         email: "random.user@gmail.com",
@@ -260,7 +361,7 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView{
+            ScrollView {
                 VStack {
                     Text("Profile")
                         .font(.largeTitle)
@@ -268,12 +369,13 @@ struct ProfileView: View {
                         .padding()
                     Spacer()
                 }
+                
                 VStack(spacing: 15) {
                     // Profile Picture
-                    ZStack{
+                    ZStack {
                         Circle()
-                            .fill(LinearGradient (
-                                gradient: Gradient(colors: [.yellow, .pink]),
+                            .fill(LinearGradient(
+                                gradient: Gradient(colors: [themeManager.currentTheme.profilePicColor1, themeManager.currentTheme.profilePicColor2]),
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ))
@@ -284,73 +386,75 @@ struct ProfileView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                     }
+                    
                     // Name and Join Date
-                    VStack(spacing: 5){
+                    VStack(spacing: 5) {
                         Text(user.name)
                             .font(.title2)
                             .fontWeight(.bold)
-                            .foregroundColor(.black)
+                            .foregroundColor(themeManager.currentTheme.textColor)
                         Text("Joined: " + user.joinDate)
-                            .font(.caption)
+                            .font(.headline)
                             .foregroundColor(.gray)
                     }
                     
-                    
-                    
                     // Personal Info Display
-                    VStack(spacing: 0){
+                    VStack(spacing: 0) {
                         Text("Bio")
                             .frame(maxWidth: 360, alignment: .leading)
                             .font(.title2)
                             .fontWeight(.bold)
                         Spacer()
-                        VStack(spacing: 0){
+                        VStack(spacing: 0) {
                             ProfileInfoRow(icon: "person.fill", title: "About", value: user.bio)
                             ProfileInfoRow(icon: "bubble.right.fill", title: "Quote", value: user.quote)
                         }
-                        .background(Color.white)
+                        .background(themeManager.currentTheme.cardColor)
                         .cornerRadius(15)
-                        .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+                        .shadow(color: Color.gray.opacity(0.2), radius: 5, x: 0, y: 2)
+                        
                         Spacer()
                         Text("Personal Information")
                             .frame(maxWidth: 360, alignment: .leading)
                             .font(.title2)
                             .fontWeight(.bold)
                         Spacer()
-                        VStack(spacing: 0){
+                        VStack(spacing: 0) {
                             ProfileInfoRow(icon: "person.fill", title: "Username", value: user.userName)
                             ProfileInfoRow(icon: "envelope.fill", title: "Email", value: user.email)
                             ProfileInfoRow(icon: "phone.fill", title: "Phone", value: user.phoneNumber)
                             ProfileInfoRow(icon: "calendar", title: "Birthday", value: user.bday)
                         }
-                        .background(Color.white)
+                        .background(themeManager.currentTheme.cardColor)
                         .cornerRadius(15)
-                        .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+                        .shadow(color: Color.gray.opacity(0.2), radius: 5, x: 0, y: 2)
                     }
                     .padding(.horizontal)
+                    
+                    // Theme selection (buttons)
+                    ThemeSelectionView()
+                        .padding(.top, 20)
                 }
             }
-            .toolbar{
-                ToolbarItem(placement: .navigationBarTrailing){
-                    Button("Edit Profile"){
-                        showingEditProfile = true
-                    }
-                    .foregroundColor(.yellow)
-                }
+            .navigationBarItems(trailing:
+                                    Button("Edit Profile") {
+                showingEditProfile = true
             }
+                .foregroundColor(themeManager.currentTheme.editProfileColor)
+            )
+            .sheet(isPresented: $showingEditProfile) {
+                EditProfileView(user: $user)
+                    .environmentObject(themeManager)
+            }
+            .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
+            .foregroundColor(themeManager.currentTheme.textColor)
         }
-        
-        .sheet(isPresented: $showingEditProfile) {
-            EditProfileView(user: $user)
-        }
-        
     }
     
-    
-    // Editing Profile Info
+    // MARK: - EditProfileView
     struct EditProfileView: View {
-        @Binding var user: UserProfile
         @Environment(\.presentationMode) var presentationMode
+        @Binding var user: UserProfile
         
         @State private var editedName: String = ""
         @State private var editedEmail: String = ""
@@ -374,26 +478,20 @@ struct ProfileView: View {
                     }
                 }
                 .navigationTitle("Edit Profile")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Cancel") {
-                            presentationMode.wrappedValue.dismiss()
-                        }
-                    }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Save") {
-                            user.bio = editedBio
-                            user.quote = editedQuote
-                            user.name = editedName
-                            user.email = editedEmail
-                            user.phoneNumber = editedPhone
-                            user.bday = editedBday
-                            presentationMode.wrappedValue.dismiss()
-                        }
-                        .foregroundColor(.yellow)
-                    }
+                .navigationBarItems(leading:
+                                        Button("Cancel") { presentationMode.wrappedValue.dismiss() },
+                                    trailing:
+                                        Button("Save") {
+                    user.bio = editedBio
+                    user.quote = editedQuote
+                    user.name = editedName
+                    user.email = editedEmail
+                    user.phoneNumber = editedPhone
+                    user.bday = editedBday
+                    presentationMode.wrappedValue.dismiss()
                 }
+                    .foregroundColor(.yellow)
+                )
             }
             .onAppear {
                 editedBio = user.bio
@@ -406,7 +504,7 @@ struct ProfileView: View {
         }
     }
     
-    // User Data
+    // MARK: - UserProfile
     struct UserProfile {
         var name: String
         var email: String
@@ -425,8 +523,9 @@ struct ProfileView: View {
         }
     }
     
-    // Structure for a row of personal info
+    // MARK: - ProfileInfoRow
     struct ProfileInfoRow: View {
+        @EnvironmentObject var themeManager: ThemeManager
         let icon: String
         let title: String
         let value: String
@@ -435,22 +534,59 @@ struct ProfileView: View {
             HStack(spacing: 15) {
                 Image(systemName: icon)
                     .font(.title3)
-                    .foregroundColor(.yellow)
+                    .foregroundColor(themeManager.currentTheme.iconColor)
                     .frame(width: 20)
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.currentTheme.personalInfoTitles)
                     Text(value)
                         .font(.body)
-                        .foregroundColor(.primary)
+                        .foregroundColor(themeManager.currentTheme.textColor)
                 }
                 
                 Spacer()
             }
             .padding()
+            .background(themeManager.currentTheme.cardColor)
+            .foregroundColor(themeManager.currentTheme.textColor)
         }
     }
+}
+
+// MARK: - Theme selection view (buttons)
+struct ThemeSelectionView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Choose Theme:")
+                .font(.title2.weight(.bold))
+                .foregroundColor(themeManager.currentTheme.textColor)
+            
+            HStack(spacing: 20) {
+                themeButton(.light, color: .white)
+                themeButton(.dark, color: .black)
+                themeButton(.ocean, color: .blue)
+                themeButton(.sunset, color: .orange)
+            }
+        }
+        .padding()
+    }
+    
+    func themeButton(_ theme: Theme, color: Color) -> some View {
+        Button {
+            themeManager.currentTheme = theme
+        } label: {
+            Circle()
+                .fill(color)
+                .frame(width: 55, height: 55)
+                .overlay(
+                    Circle()
+                        .stroke(themeManager.currentTheme == theme ? themeManager.currentTheme.accentColor : Color.clear, lineWidth: 4)
+                )
+                .shadow(radius: 4)
+        }
+    }
 }
