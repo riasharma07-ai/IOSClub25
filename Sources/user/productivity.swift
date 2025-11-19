@@ -17,6 +17,7 @@ struct ContentView: View {
                 }
             
             CalendarView { date, hour in
+
                 print("Selected date: \(date), hour: \(hour)")
             }
             .tabItem {
@@ -95,11 +96,6 @@ struct DashboardView: View {
     }
     private var streak = 12
     
-    var averageTasks: Double {
-        let total = weekData.reduce(0) {$0 + $1.taskDone}
-        return Double(total) / Double(weekData.count)
-    }
-    
     var body: some View {
         NavigationStack{
             ScrollView {
@@ -145,6 +141,10 @@ struct DashboardView: View {
                                             }
                                         }
                         
+                    var averageTasks: Double {
+                        let total = weekData.reduce(0) {$0 + $1.taskDone}
+                        return Double(total) / Double(weekData.count)
+                    }
                     Text("Try setting a goal for \(Int(averageTasks)) tasks per day.")
                         .italic()
                                     
@@ -177,125 +177,398 @@ struct DashboardView: View {
 }
 
 // Nancy!
-struct CalendarView: View {
-    @State private var currentMonth = Date.now
-    @State private var selectedDate = Date.now
-    @State private var selectedHour = Date.now
-    @State private var days: [Date] = []
+// Nancy!
 
-    let daysOfWeek = Date.capitalizedFirstLettersOfWeekdays
-    let columns = Array(repeating: GridItem(.flexible()), count: 7)
+struct CalendarView: View {
+
+    var onDateSelected: (Date) -> Void = { _ in }
+
+    @State private var selectedDate = Date()
+
     
-    var onDateSelected: (Date, Date) -> Void
 
     var body: some View {
-        NavigationView {
-            VStack {
-                Text("Calendar")
-                    .font(.largeTitle)
-                    .padding()
-                
-                Spacer()
-                
-                // Month navigation
-                HStack {
-                    Text(currentMonth.formatted(.dateTime.year().month()))
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(.white)
-                    Spacer()
-                    Button {
-                        currentMonth = Calendar.current.date(byAdding: .month, value: -1, to: currentMonth)!
-                        updateDays()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.title2)
-                            .foregroundStyle(.blue)
-                    }
-                    Button {
-                        currentMonth = Calendar.current.date(byAdding: .month, value: 1, to: currentMonth)!
-                        updateDays()
-                    } label: {
-                        Image(systemName: "chevron.right")
-                            .font(.title2)
-                            .foregroundStyle(.blue)
-                    }
-                }
-                
-                // Days of the week row
-                HStack {
-                    ForEach(daysOfWeek.indices, id: \.self) { index in
-                        Text(daysOfWeek[index])
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                
-                // Grid of days
-                LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(days, id: \.self) { day in
-                        Button {
-                            if day >= Date.now.startOfDay && day.monthInt == currentMonth.monthInt {
-                                selectedDate = day
-                                onDateSelected(selectedDate, selectedHour)
-                            }
-                        } label: {
-                            Text(day.formatted(.dateTime.day()))
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(foregroundStyle(for: day))
-                                .frame(maxWidth: .infinity, minHeight: 40)
-                                .background(
-                                    Circle()
-                                        .foregroundStyle(
-                                            day.formattedDate == selectedDate.formattedDate
-                                                ? .blue
-                                                : .clear
-                                        )
-                                )
-                        }
-                        .disabled(day < Date.now.startOfDay || day.monthInt != currentMonth.monthInt)
-                    }
-                }
-                
-                // Time picker
+
+        NavigationStack {
+
+            VStack(alignment: .center) {
+
                 DatePicker(
+
                     "",
-                    selection: $selectedHour,
-                    displayedComponents: [.hourAndMinute]
+
+                    selection: $selectedDate,
+
+                    displayedComponents: [.date]
+
                 )
-                .onChange(of: selectedHour) {
-                    onDateSelected(selectedDate, selectedHour)
+
+                .datePickerStyle(.graphical)
+
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                .padding()
+
+                
+
+                Spacer()
+
+                                
+
+                Button("Confirm Date") {
+
+                    onDateSelected(selectedDate)
+
                 }
-                .datePickerStyle(.compact)
-                .colorMultiply(.white)
-                .environment(\.colorScheme, .dark)
+
+                .padding()
+
+                                
+
+                Spacer()
+
             }
-            .padding()
+
             .navigationTitle("Calendar")
-            .onAppear {
-                updateDays()
-                onDateSelected(selectedDate, selectedHour)
+
+        }
+
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+    }
+
+}
+
+
+
+// with help of a tutorial to implement a basic calendar feature
+
+struct ScheduleView: View {
+
+    @State private var selectedSessionDate: Date = Date.now
+
+    @State private var selectedSessionHour: Date = Date.now
+
+    
+
+    var onDateSelected: (Date) -> Void = { _ in }
+
+    
+
+    var body: some View {
+
+        VStack(spacing: 10) {
+
+            VStack {
+
+                Text("Schedule View")
+
+                    .font(.system(size: 20, weight: .semibold))
+
+                    .foregroundStyle(.black)
+
+                    .textCase(.uppercase)
+
             }
+
+            
+
+            CalendarView { mergedDate in
+
+                self.selectedSessionDate = mergedDate
+
+                onDateSelected(mergedDate)
+
+            }
+
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            
+
+            HStack {
+
+                Spacer()
+
+                Button {
+
+                    let merged = merge(selectedSessionDate, selectedSessionHour)
+
+                        onDateSelected(merged)
+
+                    
+
+                } label: {
+
+                    Image(systemName: "checkmark")
+
+                        .resizable()
+
+                        .renderingMode(.template)
+
+                        .frame(width: 20, height: 20)
+
+                        .foregroundStyle(.blue)
+
+                        .padding()
+
+                        .background(
+
+                            Circle()
+
+                                .stroke(.blue, lineWidth: 2)
+
+                                .fill(.blue.opacity(0.1))
+
+                        )
+
+                }
+
+            }
+
+            Spacer()
+
         }
+
     }
-    
-    private func updateDays() {
-        days = currentMonth.calendarDisplayDays
-    }
-    
-    private func foregroundStyle(for day: Date) -> Color {
-        let isDifferentMonth = day.monthInt != currentMonth.monthInt
-        let isSelectedDate = day.formattedDate == selectedDate.formattedDate
-        let isPastDate = day < Date.now.startOfDay
-        
-        if isDifferentMonth {
-            return isSelectedDate ? .black : .white.opacity(0.3)
-        } else if isPastDate {
-            return .white.opacity(0.3)
-        } else {
-            return isSelectedDate ? .black : .white
+
+}
+
+
+
+func merge(_ date: Date, _ time: Date) -> Date {
+
+    let calendar = Calendar.current
+
+
+
+    let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
+
+    let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
+
+
+
+    var merged = DateComponents()
+
+    merged.year = dateComponents.year
+
+    merged.month = dateComponents.month
+
+    merged.day = dateComponents.day
+
+    merged.hour = timeComponents.hour
+
+    merged.minute = timeComponents.minute
+
+
+
+    return calendar.date(from: merged) ?? date
+
+}
+
+
+
+
+
+struct ProfileView: View {
+
+    var body: some View {
+
+        NavigationView {
+
+            VStack {
+
+                Text("Calendar")
+
+                    .font(.largeTitle)
+
+                    .padding()
+
+                Spacer()
+
+            }
+
+            .navigationTitle("Calendar")
+
         }
+
     }
+
+}
+
+
+
+extension Date {
+
+    static var firstDayOfWeek = Calendar.current.firstWeekday
+
+    
+
+    static var capitalizedFirstLettersOfWeekdays: [String] {
+
+        let calendar = Calendar.current
+
+        // Adjusted for the different weekday starts
+
+        var weekdays = calendar.shortWeekdaySymbols
+
+        if firstDayOfWeek > 1 {
+
+            for _ in 1..<firstDayOfWeek {
+
+                if let first = weekdays.first {
+
+                    weekdays.append(first)
+
+                    weekdays.removeFirst()
+
+                }
+
+            }
+
+        }
+
+        return weekdays.map { $0.capitalized }
+
+    }
+
+    
+
+    var startOfMonth: Date {
+
+        Calendar.current.dateInterval(of: .month, for: self)!.start
+
+    }
+
+    
+
+    var endOfMonth: Date {
+
+        let lastDay = Calendar.current.dateInterval(of: .month, for: self)!.end
+
+        return Calendar.current.date(byAdding: .day, value: -1, to: lastDay)!
+
+    }
+
+    
+
+    var numberOfDaysInMonth: Int {
+
+        Calendar.current.component(.day, from: endOfMonth)
+
+    }
+
+    
+
+    var firstWeekDayBeforeStart: Date {
+
+       let startOfMonthWeekday = Calendar.current.component(.weekday, from: startOfMonth)
+
+       var numberFromPreviousMonth = startOfMonthWeekday - Self.firstDayOfWeek
+
+       if numberFromPreviousMonth < 0 {
+
+           numberFromPreviousMonth += 7 // Adjust to a 0-6 range if negative
+
+       }
+
+       return Calendar.current.date(byAdding: .day, value: -numberFromPreviousMonth, to: startOfMonth)!
+
+    }
+
+    
+
+    var calendarDisplayDays: [Date] {
+
+       var days: [Date] = []
+
+       // Start with days from the previous month to fill the grid
+
+       let firstDisplayDay = firstWeekDayBeforeStart
+
+       var day = firstDisplayDay
+
+       while day < startOfMonth {
+
+           days.append(day)
+
+           day = Calendar.current.date(byAdding: .day, value: 1, to: day)!
+
+       }
+
+       // Add days of the current month
+
+       for dayOffset in 0..<numberOfDaysInMonth {
+
+           if let newDay = Calendar.current.date(byAdding: .day, value: dayOffset, to: startOfMonth) {
+
+               days.append(newDay)
+
+           }
+
+       }
+
+       return days
+
+    }
+
+    
+
+    var monthInt: Int {
+
+        Calendar.current.component(.month, from: self)
+
+    }
+
+    
+
+    var startOfDay: Date {
+
+        Calendar.current.startOfDay(for: self)
+
+    }
+
+    
+
+    var hourInt: Int {
+
+        Calendar.current.component(.hour, from: self)
+
+    }
+
+    
+
+    var minuteInt: Int {
+
+        Calendar.current.component(.minute, from: self)
+
+    }
+
+    
+
+    var formattedDate: String {
+
+        let formatter = ISO8601DateFormatter()
+
+        formatter.timeZone = .current
+
+        formatter.formatOptions = [.withFullDate]
+
+        return formatter.string(from: self)
+
+    }
+
+    
+
+    var formattedDateHourCombined: String {
+
+        let formatter = ISO8601DateFormatter()
+
+        formatter.timeZone = .current
+
+        return formatter.string(from: self)
+
+    }
+
 }
 
 // Gavin S
