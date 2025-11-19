@@ -335,7 +335,7 @@ struct DashboardView: View {
 
 // CalendarView
 struct CalendarView: View {
-
+    @Binding var selectedTab: Int
     var onDateSelected: (Date) -> Void = { _ in }
 
     @State private var selectedDate = Date()
@@ -428,7 +428,7 @@ struct ScheduleView: View {
 
             
 
-            CalendarView { mergedDate in
+            CalendarView(selectedTab: .constant(2)) { mergedDate in
 
                 self.selectedSessionDate = mergedDate
 
