@@ -7,7 +7,7 @@ enum Theme: String, CaseIterable {
     case dark
     case ocean
     case sunset   // default
-
+    
     // Background Color
     var backgroundColor: Color {
         switch self {
@@ -101,49 +101,22 @@ enum Theme: String, CaseIterable {
     // Color of Bar Graph
     var barsColor: Color {
         switch self {
-        case .light: return .blue
+        case .light: return.blue
         case .dark: return .red
         case .ocean: return .mint
         case .sunset: return .pink
         }
     }
+}
 
 // MARK: - Theme manager (shared)
 class ThemeManager: ObservableObject {
     @Published var currentTheme: Theme = .sunset
 }
-// MARK: - Habit store for scheduled habits
-struct ScheduledHabit: Identifiable, Codable {
-    let id: UUID
-    let title: String
-    let date: Date
-    init(id: UUID = UUID(), title: String, date: Date) {
-        self.id = id
-        self.title = title
-        self.date = date
-    }
-}
-
-final class HabitStore: ObservableObject {
-    @Published var scheduled: [ScheduledHabit] = []
-
-    func addScheduledHabit(title: String, date: Date) {
-        let habit = ScheduledHabit(title: title, date: date)
-        scheduled.append(habit)
-        // keep sorted by date
-        scheduled.sort { $0.date < $1.date }
-    }
-
-    func habits(for date: Date) -> [ScheduledHabit] {
-        let calendar = Calendar.current
-        return scheduled.filter { calendar.isDate($0.date, inSameDayAs: date) }
-    }
-}
 // MARK: - ContentView (TabView)
 struct ContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedTab = 1
-    @StateObject private var habitStore = HabitStore()
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -178,8 +151,6 @@ struct ContentView: View {
         // Tab accent color follows theme
         .accentColor(themeManager.currentTheme.accentColor)
         .background(themeManager.currentTheme.backgroundColor)
-        // Inject habit store into child views
-        .environmentObject(habitStore)
     }
 }
 
